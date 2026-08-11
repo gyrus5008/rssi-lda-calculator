@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RSSI LDA 分型计算器 | RSSI LDA Subtyping Calculator</title>
+<title>RSSI LDA Subtyping Calculator</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:'Segoe UI','Microsoft YaHei',Helvetica,Arial,sans-serif;
+    font-family:'Segoe UI',Helvetica,Arial,sans-serif;
     background:#f2f4f7;color:#1a1a2e;
     display:flex;justify-content:center;align-items:center;
     min-height:100vh;padding:20px;
@@ -15,13 +15,13 @@
   .calc{
     background:#fff;border-radius:12px;
     box-shadow:0 2px 16px rgba(0,0,0,0.07);
-    max-width:560px;width:100%;padding:32px 32px 24px;
+    max-width:540px;width:100%;padding:32px 32px 24px;
   }
   .calc h1{
-    text-align:center;font-size:16px;font-weight:700;
+    text-align:center;font-size:17px;font-weight:700;
     color:#0D4B7C;margin-bottom:4px;
   }
-  .calc h1.en{font-size:13px;font-weight:400;color:#888;margin-bottom:18px}
+  .calc .subtitle{text-align:center;font-size:12px;color:#999;margin-bottom:18px}
   .formula{
     background:#f4f6fa;border-left:4px solid #0D4B7C;
     padding:14px 18px;border-radius:4px;margin-bottom:22px;
@@ -35,7 +35,7 @@
 
   .field{margin-bottom:16px}
   .field label{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
-  .field label .en{font-weight:400;color:#999;font-size:11px}
+  .field label span{font-weight:400;color:#999;font-size:11px}
   .field input{
     width:100%;padding:9px 12px;border:2px solid #dce1e8;
     border-radius:6px;font-size:15px;font-family:inherit;
@@ -70,7 +70,6 @@
   .result.uncertain{background:#fef9e7;border:1px solid #f9e79f}
 
   .result .subtype{font-size:15px;font-weight:700;margin-bottom:4px}
-  .result .subtype .cn{font-size:14px}
   .result.focal .subtype{color:#1565c0}
   .result.expansive .subtype{color:#e65100}
   .result.uncertain .subtype{color:#b7950b}
@@ -90,145 +89,142 @@
 <body>
 
 <div class="calc">
-  <h1>RSSI 三参数 LDA 分型计算器</h1>
-  <h1 class="en">Three-Parameter LDA Subtyping Calculator</h1>
+  <h1>RSSI LDA Subtyping Calculator</h1>
+  <div class="subtitle">Three-Parameter Morphological Classification of Lenticulostriate RSSI</div>
 
   <div class="formula">
-    <div class="eq">D = 0.836 × LS − 0.424 × TNS − 0.112 × MAD</div>
+    <div class="eq">D = 0.836 &times; LS &minus; 0.424 &times; TNS &minus; 0.112 &times; MAD</div>
     <div class="rule">
-      D &le; −0.2183 → <span class="exp">扩展型 (Expansive)</span><br>
-      D &gt; −0.2183 → <span class="focal">局灶型 (Focal)</span>
+      D &le; &minus;0.2183 &rarr; <span class="exp">Expansive</span><br>
+      D &gt; &minus;0.2183 &rarr; <span class="focal">Focal</span>
     </div>
   </div>
 
   <div class="error" id="err"></div>
 
   <div class="field">
-    <label>LS <span class="en">— 最低受累层面 (Lowest Slice, 1–6)</span></label>
-    <input type="number" id="ls" placeholder="例: 3" min="1" max="6" step="1">
-    <div class="hint">梗死灶在轴位DWI上出现的最低层面编号</div>
+    <label>LS <span>&mdash; Lowest Slice involved (1&ndash;6)</span></label>
+    <input type="number" id="ls" placeholder="e.g. 3" min="1" max="6" step="1">
+    <div class="hint">Most caudal axial DWI slice showing the infarct</div>
   </div>
 
   <div class="field">
-    <label>TNS <span class="en">— 总受累层面数 (Total Number of Slices, 1–6)</span></label>
-    <input type="number" id="tns" placeholder="例: 3" min="1" max="6" step="1">
-    <div class="hint">梗死灶连续出现的层面总数</div>
+    <label>TNS <span>&mdash; Total Number of Slices involved (1&ndash;6)</span></label>
+    <input type="number" id="tns" placeholder="e.g. 3" min="1" max="6" step="1">
+    <div class="hint">Number of contiguous slices containing the infarct</div>
   </div>
 
   <div class="field">
-    <label>MAD <span class="en">— 最大轴面直径 (Maximal Axial Diameter, mm)</span></label>
-    <input type="number" id="mad" placeholder="例: 12.5" min="0.5" max="30" step="0.1">
-    <div class="hint">梗死灶最大层面的最长轴面直径 (1–30 mm)</div>
+    <label>MAD <span>&mdash; Maximal Axial Diameter (mm)</span></label>
+    <input type="number" id="mad" placeholder="e.g. 12.5" min="0.5" max="30" step="0.1">
+    <div class="hint">Longest diameter on the largest infarct slice (0.5&ndash;30 mm)</div>
   </div>
 
   <div class="btn-row">
-    <button class="btn" onclick="calc()">计算分型 / Calculate</button>
+    <button class="btn" onclick="calc()">Calculate</button>
   </div>
 
   <div class="result" id="res">
     <div class="subtype" id="resLabel"></div>
     <div class="d-val" id="resD"></div>
-    <div class="confidence" id="resConfidence"></div>
+    <div class="confidence" id="resNote"></div>
   </div>
 
   <footer>
-    基于共识聚类构建的三变量线性判别分析（LDA）分型工具<br>
-    推导队列 n=582，验证队列 n=351（郑州大学第一附属医院）<br>
-    PAM + Manhattan距离，Bootstrap ×1000，PAC=0.026<br>
-    <span class="ref">论文: Gao Y, et al. RSSI三参数形态分型. (2025)</span><br>
+    Lesion-Derived Anatomy (LDA) discriminant function derived from consensus clustering<br>
+    (PAM + Manhattan distance, Bootstrap &times;1000, 80% subsample, PAC = 0.026).<br>
+    Derivation cohort n = 582; independent temporal-hospital validation cohort n = 351.<br>
+    Zhengzhou University First Affiliated Hospital, Zhengzhou, China.<br>
+    <span class="ref">Gao Y, et al. Three-parameter morphological classification of lenticulostriate RSSI:<br>from threshold conflict to data-driven evidence for a continuous spectrum. (2025)</span><br>
     <a href="https://github.com/gyrus5008/rssi-lda-calculator" target="_blank">GitHub</a>
   </footer>
 </div>
 
 <script>
-// LDA coefficients and cutoff (final version)
+// ============================================================
+// LDA coefficients and cutoff (final validated version)
+// Derivation n=582, Validation n=351
+// D SD = 1.8107 (derivation cohort)
+// ============================================================
 var B_LS  =  0.836;
 var B_TNS = -0.424;
 var B_MAD = -0.112;
 var CUTOFF = -0.2183;
-// D-value SD from derivation cohort (n=582)
-var D_SD = 1.8107;
+var D_SD   = 1.8107;
 var HALF_SD = 0.5 * D_SD;  // 0.9053
 
 function calc(){
-  var e = document.getElementById('err'),
-      r = document.getElementById('res');
-  e.classList.remove('on');
-  r.classList.remove('on','focal','expansive','uncertain');
+  var errEl = document.getElementById('err'),
+      resEl = document.getElementById('res');
+  errEl.classList.remove('on');
+  resEl.classList.remove('on','focal','expansive','uncertain');
 
+  // --- Parse inputs ---
   var ls  = parseInt(document.getElementById('ls').value),
       tns = parseInt(document.getElementById('tns').value),
       mad = parseFloat(document.getElementById('mad').value);
 
-  if (isNaN(ls) || isNaN(tns) || isNaN(mad)) {
-    e.textContent = '请输入三个参数的有效数值。| Please enter valid numbers for all three fields.';
-    e.classList.add('on'); return;
-  }
-  if (!Number.isInteger(ls) || ls < 1 || ls > 6) {
-    e.textContent = 'LS 须为 1–6 的整数。| LS must be an integer from 1 to 6.';
-    e.classList.add('on'); return;
-  }
-  if (!Number.isInteger(tns) || tns < 1 || tns > 6) {
-    e.textContent = 'TNS 须为 1–6 的整数。| TNS must be an integer from 1 to 6.';
-    e.classList.add('on'); return;
-  }
-  if (ls + tns - 1 > 6) {
-    e.textContent = '最上层面 (LS+TNS−1=' + (ls+tns-1) + ') 超出第6层，请核查LS和TNS。| Uppermost slice exceeds slice 6.';
-    e.classList.add('on'); return;
-  }
-  if (mad <= 0 || mad > 30) {
-    e.textContent = 'MAD 须为 0.5–30 mm。| MAD must be between 0.5 and 30 mm.';
-    e.classList.add('on'); return;
+  // --- Validation ---
+  var msgs = [];
+  if (isNaN(ls) || isNaN(tns) || isNaN(mad))
+    msgs.push('Please enter valid numbers for all three fields.');
+  if (!Number.isInteger(ls) || ls < 1 || ls > 6)
+    msgs.push('LS must be an integer from 1 to 6.');
+  if (!Number.isInteger(tns) || tns < 1 || tns > 6)
+    msgs.push('TNS must be an integer from 1 to 6.');
+  if (ls + tns - 1 > 6)
+    msgs.push('Uppermost slice (LS+TNS−1 = ' + (ls+tns-1) + ') exceeds slice 6. Check LS and TNS.');
+  if (mad <= 0 || mad > 30)
+    msgs.push('MAD must be between 0.5 and 30 mm.');
+
+  if (msgs.length > 0) {
+    errEl.innerHTML = msgs.join('<br>');
+    errEl.classList.add('on');
+    return;
   }
 
+  // --- Compute D ---
   var d = B_LS*ls + B_TNS*tns + B_MAD*mad;
-  var distFromCutoff = Math.abs(d - CUTOFF);
-  var isUncertain = distFromCutoff <= HALF_SD;
-  var isExpansive = d <= CUTOFF;  // D ≤ −0.2183 → Expansive
+  var dist = Math.abs(d - CUTOFF);
+  var isUncertain = (dist <= HALF_SD);
+  var isExpansive  = (d <= CUTOFF);   // D <= -0.2183
 
-  // Determine result class
+  // --- Display ---
   if (isUncertain) {
-    r.classList.add('on', 'uncertain');
+    resEl.classList.add('on', 'uncertain');
   } else {
-    r.classList.add('on', isExpansive ? 'expansive' : 'focal');
+    resEl.classList.add('on', isExpansive ? 'expansive' : 'focal');
   }
 
-  // Subtype label
-  var subtypeCN, subtypeEN;
+  // Subtype
+  var subtype;
   if (isUncertain) {
-    subtypeCN = '不确定区间';
-    subtypeEN = 'Uncertainty Zone';
+    subtype = 'Uncertainty Zone (|D − cutoff| = ' + dist.toFixed(2) + ' ≤ 0.5 SD)';
   } else if (isExpansive) {
-    subtypeCN = '扩展型';
-    subtypeEN = 'Expansive';
+    subtype = 'Expansive (D ≤ −0.2183)';
   } else {
-    subtypeCN = '局灶型';
-    subtypeEN = 'Focal';
+    subtype = 'Focal (D > −0.2183)';
   }
-
-  document.getElementById('resLabel').innerHTML =
-    '<span class="cn">' + subtypeCN + '</span> &nbsp;(' + subtypeEN + ')';
+  document.getElementById('resLabel').innerHTML = '<strong>' + subtype + '</strong>';
   document.getElementById('resD').textContent = 'D = ' + d.toFixed(4);
 
-  // Confidence / interpretation
-  var confHTML = '';
+  // Interpretation
+  var note;
   if (isUncertain) {
-    confHTML = '<strong>过渡区间 | Transition Zone</strong><br>' +
-      '|D − cutoff| = ' + distFromCutoff.toFixed(2) + ' ≤ 0.5 SD (' + HALF_SD.toFixed(2) + ')<br>' +
-      '两种病因机制的相对贡献可能较为均衡，建议对两个病因方向均进行系统评估。<br>' +
-      '<span style="font-size:10px;color:#999">病因贡献均衡，建议双方向评估 | Balanced etiology — evaluate both directions</span>';
+    note = '<strong>Uncertainty Zone</strong><br>'
+      + '|D − cutoff| = ' + dist.toFixed(2) + ' ≤ 0.5 SD (' + HALF_SD.toFixed(2) + ')<br>'
+      + 'Balanced etiology contributions &mdash; systematic evaluation of both<br>'
+      + 'parent artery disease and small vessel disease is recommended.';
   } else if (isExpansive) {
-    confHTML = '<strong>高置信区间 | High Confidence</strong><br>' +
-      '|D − cutoff| = ' + distFromCutoff.toFixed(2) + ' > 0.5 SD<br>' +
-      '提示载体动脉粥样硬化 / 穿支动脉开口病变可能。<br>' +
-      '<span style="font-size:10px;color:#999">建议优先评估载体动脉（如高分辨率血管壁成像）| Consider parent artery evaluation (HR-VWI)</span>';
+    note = '<strong>High-Confidence Zone</strong> (|D − cutoff| = ' + dist.toFixed(2) + ' &gt; 0.5 SD)<br>'
+      + 'Suggests branch atheromatous disease or parent artery atherosclerosis.<br>'
+      + 'Consider prioritizing parent artery evaluation (e.g., HR-VWI).';
   } else {
-    confHTML = '<strong>高置信区间 | High Confidence</strong><br>' +
-      '|D − cutoff| = ' + distFromCutoff.toFixed(2) + ' > 0.5 SD<br>' +
-      '提示穿支动脉远端小血管病可能（脂质玻璃样变性 / 纤维素样坏死）。<br>' +
-      '<span style="font-size:10px;color:#999">建议优先评估小血管病危险因素（如血压管理）| Consider SVD risk factor evaluation (e.g., BP management)</span>';
+    note = '<strong>High-Confidence Zone</strong> (|D − cutoff| = ' + dist.toFixed(2) + ' &gt; 0.5 SD)<br>'
+      + 'Suggests lipohyalinosis / fibrinoid necrosis (small vessel disease).<br>'
+      + 'Consider prioritizing SVD risk factor evaluation (e.g., blood pressure management).';
   }
-  document.getElementById('resConfidence').innerHTML = confHTML;
+  document.getElementById('resNote').innerHTML = note;
 }
 
 // Allow Enter key to trigger calculation
