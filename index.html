@@ -1,13 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RSSI LDA Subtyping Calculator</title>
+<title>RSSI LDA 分型计算器 | RSSI LDA Subtyping Calculator</title>
 <style>
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
   body{
-    font-family:'Segoe UI',Helvetica,Arial,sans-serif;
+    font-family:'Segoe UI','Microsoft YaHei',Helvetica,Arial,sans-serif;
     background:#f2f4f7;color:#1a1a2e;
     display:flex;justify-content:center;align-items:center;
     min-height:100vh;padding:20px;
@@ -15,36 +15,39 @@
   .calc{
     background:#fff;border-radius:12px;
     box-shadow:0 2px 16px rgba(0,0,0,0.07);
-    max-width:540px;width:100%;padding:32px 32px 20px;
+    max-width:560px;width:100%;padding:32px 32px 24px;
   }
   .calc h1{
-    text-align:center;font-size:18px;font-weight:700;
-    color:#0D4B7C;margin-bottom:20px;
+    text-align:center;font-size:16px;font-weight:700;
+    color:#0D4B7C;margin-bottom:4px;
   }
+  .calc h1.en{font-size:13px;font-weight:400;color:#888;margin-bottom:18px}
   .formula{
     background:#f4f6fa;border-left:4px solid #0D4B7C;
-    padding:12px 16px;border-radius:4px;margin-bottom:20px;
+    padding:14px 18px;border-radius:4px;margin-bottom:22px;
     font-family:'SF Mono','Consolas','Courier New',monospace;
-    text-align:center;line-height:1.6;
+    text-align:center;line-height:1.7;
   }
-  .formula .eq{font-size:15px;font-weight:700;white-space:nowrap}
-  .formula .rule{font-size:12px;color:#777;white-space:nowrap}
+  .formula .eq{font-size:16px;font-weight:700}
+  .formula .rule{font-size:12px;color:#666;margin-top:4px}
+  .formula .rule span.focal{color:#1565c0;font-weight:600}
+  .formula .rule span.exp{color:#e65100;font-weight:600}
 
-  .field{margin-bottom:14px}
-  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:3px}
-  .field label span{font-weight:400;color:#999;font-size:11px}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+  .field label .en{font-weight:400;color:#999;font-size:11px}
   .field input{
-    width:100%;padding:8px 12px;border:2px solid #dce1e8;
+    width:100%;padding:9px 12px;border:2px solid #dce1e8;
     border-radius:6px;font-size:15px;font-family:inherit;
     outline:none;transition:border-color 0.2s;background:#fafbfc;
   }
   .field input:focus{border-color:#0D4B7C;background:#fff}
   .field .hint{font-size:10px;color:#bbb;margin-top:2px}
 
-  .btn-row{text-align:center;margin:18px 0 14px}
+  .btn-row{text-align:center;margin:20px 0 16px}
   .btn{
     background:#0D4B7C;color:#fff;border:none;
-    padding:10px 44px;font-size:14px;font-weight:600;
+    padding:11px 48px;font-size:15px;font-weight:600;
     border-radius:6px;cursor:pointer;transition:background 0.2s;
     font-family:inherit;
   }
@@ -58,100 +61,180 @@
   .error.on{display:block}
 
   .result{
-    text-align:center;padding:16px;border-radius:8px;
+    text-align:center;padding:16px 20px;border-radius:8px;
     display:none;margin-top:4px;
   }
   .result.on{display:block}
   .result.focal{background:#e8f4fd;border:1px solid #b3d8f0}
   .result.expansive{background:#fff5ee;border:1px solid #f5cba7}
+  .result.uncertain{background:#fef9e7;border:1px solid #f9e79f}
 
-  .result .subtype{font-size:14px;font-weight:700;margin-bottom:4px}
+  .result .subtype{font-size:15px;font-weight:700;margin-bottom:4px}
+  .result .subtype .cn{font-size:14px}
   .result.focal .subtype{color:#1565c0}
   .result.expansive .subtype{color:#e65100}
+  .result.uncertain .subtype{color:#b7950b}
 
-  .result .d-val{font-size:28px;font-weight:700;font-family:'SF Mono','Consolas',monospace}
-  .result .note{font-size:11px;color:#888;margin-top:4px}
+  .result .d-val{font-size:28px;font-weight:700;font-family:'SF Mono','Consolas',monospace;margin:6px 0}
+  .result .confidence{font-size:12px;margin-top:4px;line-height:1.5}
+  .result .confidence strong{font-size:13px}
 
   footer{
-    text-align:center;font-size:9px;color:#ccc;margin-top:18px;
-    border-top:1px solid #eee;padding-top:12px;line-height:1.7;
+    text-align:center;font-size:9px;color:#ccc;margin-top:20px;
+    border-top:1px solid #eee;padding-top:14px;line-height:1.8;
   }
   footer a{color:#0D4B7C;text-decoration:none}
+  footer .ref{color:#aaa}
 </style>
 </head>
 <body>
 
 <div class="calc">
-  <h1>RSSI LDA Subtyping Calculator</h1>
+  <h1>RSSI 三参数 LDA 分型计算器</h1>
+  <h1 class="en">Three-Parameter LDA Subtyping Calculator</h1>
 
   <div class="formula">
-    <div class="eq">D = −0.7359·LS + 0.5831·TNS + 0.1128·MAD</div>
-    <div class="rule">D &gt; 0.9423 → <strong>Expansive</strong> &nbsp;|&nbsp; D ≤ 0.9423 → <strong>Focal</strong></div>
+    <div class="eq">D = 0.836 × LS − 0.424 × TNS − 0.112 × MAD</div>
+    <div class="rule">
+      D &le; −0.2183 → <span class="exp">扩展型 (Expansive)</span><br>
+      D &gt; −0.2183 → <span class="focal">局灶型 (Focal)</span>
+    </div>
   </div>
 
   <div class="error" id="err"></div>
 
   <div class="field">
-    <label>LS <span>— Lowest Slice involved (1–6)</span></label>
-    <input type="number" id="ls" placeholder="e.g. 3" min="1" max="6" step="1">
-    <div class="hint">Most caudal axial DWI slice showing the infarct</div>
+    <label>LS <span class="en">— 最低受累层面 (Lowest Slice, 1–6)</span></label>
+    <input type="number" id="ls" placeholder="例: 3" min="1" max="6" step="1">
+    <div class="hint">梗死灶在轴位DWI上出现的最低层面编号</div>
   </div>
 
   <div class="field">
-    <label>TNS <span>— Total Number of Slices involved (1–6)</span></label>
-    <input type="number" id="tns" placeholder="e.g. 3" min="1" max="6" step="1">
-    <div class="hint">Number of contiguous slices containing the infarct</div>
+    <label>TNS <span class="en">— 总受累层面数 (Total Number of Slices, 1–6)</span></label>
+    <input type="number" id="tns" placeholder="例: 3" min="1" max="6" step="1">
+    <div class="hint">梗死灶连续出现的层面总数</div>
   </div>
 
   <div class="field">
-    <label>MAD <span>— Maximal Axial Diameter (mm)</span></label>
-    <input type="number" id="mad" placeholder="e.g. 12.5" min="0.5" max="30" step="0.1">
-    <div class="hint">Longest diameter on the largest infarct slice (1–30 mm)</div>
+    <label>MAD <span class="en">— 最大轴面直径 (Maximal Axial Diameter, mm)</span></label>
+    <input type="number" id="mad" placeholder="例: 12.5" min="0.5" max="30" step="0.1">
+    <div class="hint">梗死灶最大层面的最长轴面直径 (1–30 mm)</div>
   </div>
 
   <div class="btn-row">
-    <button class="btn" onclick="calc()">Calculate</button>
+    <button class="btn" onclick="calc()">计算分型 / Calculate</button>
   </div>
 
   <div class="result" id="res">
     <div class="subtype" id="resLabel"></div>
     <div class="d-val" id="resD"></div>
-    <div class="note" id="resNote"></div>
+    <div class="confidence" id="resConfidence"></div>
   </div>
 
   <footer>
-    Lesion-Derived Anatomy (LDA) discriminant function &mdash; derived from consensus clustering<br>
-    (PAM + Manhattan distance, Bootstrap ×1000, 80% subsample, PAC = 0.010).<br>
-    Derivation (n = 629) &amp; Validation (n = 230) cohorts: Zhengzhou University First Affiliated Hospital.<br>
-    Registered at <a href="https://clinicaltrials.gov/ct2/show/NCT05679986" target="_blank">ClinicalTrials.gov (NCT05679986)</a>.
+    基于共识聚类构建的三变量线性判别分析（LDA）分型工具<br>
+    推导队列 n=582，验证队列 n=351（郑州大学第一附属医院）<br>
+    PAM + Manhattan距离，Bootstrap ×1000，PAC=0.026<br>
+    <span class="ref">论文: Gao Y, et al. RSSI三参数形态分型. (2025)</span><br>
+    <a href="https://github.com/gyrus5008/rssi-lda-calculator" target="_blank">GitHub</a>
   </footer>
 </div>
 
 <script>
-var A=-0.7359,B=0.5831,C=0.1128,CUT=0.9423;
+// LDA coefficients and cutoff (final version)
+var B_LS  =  0.836;
+var B_TNS = -0.424;
+var B_MAD = -0.112;
+var CUTOFF = -0.2183;
+// D-value SD from derivation cohort (n=582)
+var D_SD = 1.8107;
+var HALF_SD = 0.5 * D_SD;  // 0.9053
+
 function calc(){
-  var e=document.getElementById('err'),r=document.getElementById('res');
-  e.classList.remove('on');r.classList.remove('on','focal','expansive');
+  var e = document.getElementById('err'),
+      r = document.getElementById('res');
+  e.classList.remove('on');
+  r.classList.remove('on','focal','expansive','uncertain');
 
-  var ls=parseInt(document.getElementById('ls').value),
-      tns=parseInt(document.getElementById('tns').value),
-      mad=parseFloat(document.getElementById('mad').value);
+  var ls  = parseInt(document.getElementById('ls').value),
+      tns = parseInt(document.getElementById('tns').value),
+      mad = parseFloat(document.getElementById('mad').value);
 
-  if(isNaN(ls)||isNaN(tns)||isNaN(mad)){e.textContent='Please enter valid numbers for all three fields.';e.classList.add('on');return}
-  if(!Number.isInteger(ls)||ls<1||ls>6){e.textContent='LS must be an integer from 1 to 6.';e.classList.add('on');return}
-  if(!Number.isInteger(tns)||tns<1||tns>6){e.textContent='TNS must be an integer from 1 to 6.';e.classList.add('on');return}
-  if(ls+tns-1>6){e.textContent='Uppermost slice (LS+TNS-1='+(ls+tns-1)+') exceeds slice 6. Check LS and TNS.';e.classList.add('on');return}
-  if(mad<=0||mad>30){e.textContent='MAD must be between 0.5 and 30 mm.';e.classList.add('on');return}
+  if (isNaN(ls) || isNaN(tns) || isNaN(mad)) {
+    e.textContent = '请输入三个参数的有效数值。| Please enter valid numbers for all three fields.';
+    e.classList.add('on'); return;
+  }
+  if (!Number.isInteger(ls) || ls < 1 || ls > 6) {
+    e.textContent = 'LS 须为 1–6 的整数。| LS must be an integer from 1 to 6.';
+    e.classList.add('on'); return;
+  }
+  if (!Number.isInteger(tns) || tns < 1 || tns > 6) {
+    e.textContent = 'TNS 须为 1–6 的整数。| TNS must be an integer from 1 to 6.';
+    e.classList.add('on'); return;
+  }
+  if (ls + tns - 1 > 6) {
+    e.textContent = '最上层面 (LS+TNS−1=' + (ls+tns-1) + ') 超出第6层，请核查LS和TNS。| Uppermost slice exceeds slice 6.';
+    e.classList.add('on'); return;
+  }
+  if (mad <= 0 || mad > 30) {
+    e.textContent = 'MAD 须为 0.5–30 mm。| MAD must be between 0.5 and 30 mm.';
+    e.classList.add('on'); return;
+  }
 
-  var d=A*ls+B*tns+C*mad,prox=d>CUT;
-  r.classList.add('on',prox?'expansive':'focal');
-  document.getElementById('resLabel').innerHTML=prox?'Subtype: <strong>Expansive</strong> (D &gt; 0.9423)':'Subtype: <strong>Focal</strong> (D &le; 0.9423)';
-  document.getElementById('resD').textContent='D = '+d.toFixed(4);
-  document.getElementById('resNote').textContent=prox?'Suggests branch atheromatous disease or parent artery disease.':'Suggests lipohyalinosis / fibrinoid necrosis (small vessel disease).';
+  var d = B_LS*ls + B_TNS*tns + B_MAD*mad;
+  var distFromCutoff = Math.abs(d - CUTOFF);
+  var isUncertain = distFromCutoff <= HALF_SD;
+  var isExpansive = d <= CUTOFF;  // D ≤ −0.2183 → Expansive
+
+  // Determine result class
+  if (isUncertain) {
+    r.classList.add('on', 'uncertain');
+  } else {
+    r.classList.add('on', isExpansive ? 'expansive' : 'focal');
+  }
+
+  // Subtype label
+  var subtypeCN, subtypeEN;
+  if (isUncertain) {
+    subtypeCN = '不确定区间';
+    subtypeEN = 'Uncertainty Zone';
+  } else if (isExpansive) {
+    subtypeCN = '扩展型';
+    subtypeEN = 'Expansive';
+  } else {
+    subtypeCN = '局灶型';
+    subtypeEN = 'Focal';
+  }
+
+  document.getElementById('resLabel').innerHTML =
+    '<span class="cn">' + subtypeCN + '</span> &nbsp;(' + subtypeEN + ')';
+  document.getElementById('resD').textContent = 'D = ' + d.toFixed(4);
+
+  // Confidence / interpretation
+  var confHTML = '';
+  if (isUncertain) {
+    confHTML = '<strong>过渡区间 | Transition Zone</strong><br>' +
+      '|D − cutoff| = ' + distFromCutoff.toFixed(2) + ' ≤ 0.5 SD (' + HALF_SD.toFixed(2) + ')<br>' +
+      '两种病因机制的相对贡献可能较为均衡，建议对两个病因方向均进行系统评估。<br>' +
+      '<span style="font-size:10px;color:#999">病因贡献均衡，建议双方向评估 | Balanced etiology — evaluate both directions</span>';
+  } else if (isExpansive) {
+    confHTML = '<strong>高置信区间 | High Confidence</strong><br>' +
+      '|D − cutoff| = ' + distFromCutoff.toFixed(2) + ' > 0.5 SD<br>' +
+      '提示载体动脉粥样硬化 / 穿支动脉开口病变可能。<br>' +
+      '<span style="font-size:10px;color:#999">建议优先评估载体动脉（如高分辨率血管壁成像）| Consider parent artery evaluation (HR-VWI)</span>';
+  } else {
+    confHTML = '<strong>高置信区间 | High Confidence</strong><br>' +
+      '|D − cutoff| = ' + distFromCutoff.toFixed(2) + ' > 0.5 SD<br>' +
+      '提示穿支动脉远端小血管病可能（脂质玻璃样变性 / 纤维素样坏死）。<br>' +
+      '<span style="font-size:10px;color:#999">建议优先评估小血管病危险因素（如血压管理）| Consider SVD risk factor evaluation (e.g., BP management)</span>';
+  }
+  document.getElementById('resConfidence').innerHTML = confHTML;
 }
-document.querySelectorAll('input').forEach(function(el){el.addEventListener('keydown',function(e){if(e.key==='Enter')calc()})});
+
+// Allow Enter key to trigger calculation
+document.querySelectorAll('input').forEach(function(el){
+  el.addEventListener('keydown', function(e){ if(e.key === 'Enter') calc(); });
+});
 </script>
-  <p style="text-align:center; color:#666; font-size:12px; margin-top:20px;">  For Research Use Only. Not for clinical decision-making.
-  </p>
 </body>
 </html>
