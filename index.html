@@ -95,8 +95,8 @@
   <div class="formula">
     <div class="eq">D = 0.836 &times; LS &minus; 0.424 &times; TNS &minus; 0.112 &times; MAD</div>
     <div class="rule">
-      D &le; &minus;0.2183 &rarr; <span class="exp">Expansive</span><br>
-      D &gt; &minus;0.2183 &rarr; <span class="focal">Focal</span>
+      D &le; &minus;0.22 &rarr; <span class="exp">Expansive</span><br>
+      D &gt; &minus;0.22 &rarr; <span class="focal">Focal</span>
     </div>
   </div>
 
@@ -135,7 +135,7 @@
     (PAM + Manhattan distance, Bootstrap &times;1000, 80% subsample, PAC = 0.026).<br>
     Derivation cohort n = 582; independent temporal-hospital validation cohort n = 351.<br>
     Zhengzhou University First Affiliated Hospital, Zhengzhou, China.<br>
-    <span class="ref">Gao Y, et al. Three-parameter morphological classification of lenticulostriate RSSI:<br>from threshold conflict to data-driven evidence for a continuous spectrum. (2025)</span><br>
+    <span class="ref">Gao Y, et al. Data-Driven Subtyping of Lenticulostriate RSSI: Two Subtypes, One Spectrum.</span><br>
     <a href="https://github.com/gyrus5008/rssi-lda-calculator" target="_blank">GitHub</a>
   </footer>
 </div>
@@ -149,7 +149,7 @@
 var B_LS  =  0.836;
 var B_TNS = -0.424;
 var B_MAD = -0.112;
-var CUTOFF = -0.2183;
+var CUTOFF = -0.22;
 var D_SD   = 1.8107;
 var HALF_SD = 0.5 * D_SD;  // 0.9053
 
@@ -187,7 +187,7 @@ function calc(){
   var d = B_LS*ls + B_TNS*tns + B_MAD*mad;
   var dist = Math.abs(d - CUTOFF);
   var isUncertain = (dist <= HALF_SD);
-  var isExpansive  = (d <= CUTOFF);   // D <= -0.2183
+  var isExpansive  = (d <= CUTOFF);   // D <= -0.22
 
   // --- Display ---
   if (isUncertain) {
@@ -201,9 +201,9 @@ function calc(){
   if (isUncertain) {
     subtype = 'Uncertainty Zone (|D − cutoff| = ' + dist.toFixed(2) + ' ≤ 0.5 SD)';
   } else if (isExpansive) {
-    subtype = 'Expansive (D ≤ −0.2183)';
+    subtype = 'Expansive (D ≤ −0.22)';
   } else {
-    subtype = 'Focal (D > −0.2183)';
+    subtype = 'Focal (D > −0.22)';
   }
   document.getElementById('resLabel').innerHTML = '<strong>' + subtype + '</strong>';
   document.getElementById('resD').textContent = 'D = ' + d.toFixed(4);
